@@ -4,10 +4,12 @@
 This runtime intentionally avoids the Search API daily collector, CI aggregation,
 and history reports. It refreshes only public-event-driven state and README
 blocks so ACTIVITY STREAM and LIVE SIGNAL can run more frequently than the full
-profile job.
+profile job while preserving the consumer's preset, theme, README path, and
+heavier analytics state.
 """
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import json
 import os
@@ -17,8 +19,6 @@ from datetime import datetime
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Mapping
-
-import yaml
 
 DYNAMIC_KEYS = (
     "date",
@@ -30,6 +30,8 @@ DYNAMIC_KEYS = (
     "current_focus",
     "activity_stream",
 )
+
+DYNAMIC_WIDGETS = ("live_signal", "current_focus", "activity_stream")
 
 MARKERS = {
     "live_signal": (
@@ -86,20 +88,33 @@ def state_refresh_time(state: Mapping[str, Any], fallback: datetime, tz: Any) ->
 
 
 def with_updated_at(block: str, end_marker: str, refresh_at: datetime) -> str:
+    zone = refresh_at.tzname() or "local"
     note = (
         '<p align="center"><sub>latest public signal refresh · '
-        + refresh_at.strftime("%H:%M JST")
+        + refresh_at.strftime("%H:%M ")
+        + zone
         + "</sub></p>"
     )
     return block.replace(end_marker, f"{note}\n{end_marker}", 1)
 
 
-def run(config_path: Path, workspace: Path, action_path: Path) -> None:
-    raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-    if not isinstance(raw, Mapping):
-        raise ValueError("Profile Signal config must be a YAML mapping")
+def load_runtime_config(config_path: Path, action_path: Path) -> tuple[Any, dict[str, Any], dict[str, bool]]:
+    src = action_path / "src"
+    if str(src) not in sys.path:
+        sys.path.insert(0, str(src))
 
-    profile = raw.get("profile") or {}
+    orchestrator = importlib.import_module("orchestrator")
+    preset_runtime = importlib.import_module("preset_runtime")
+    preset_runtime.install_registry(action_path)
+    config = orchestrator.load_config(config_path)
+    enabled = orchestrator.resolve_widgets(config)
+    return orchestrator, config, enabled
+
+
+def run(config_path: Path, workspace: Path, action_path: Path) -> None:
+    orchestrator, config, enabled = load_runtime_config(config_path, action_path)
+
+    profile = config.get("profile") or {}
     username = str(profile.get("username") or os.getenv("GITHUB_ACTOR") or "")
     if not username:
         raise ValueError("profile.username is required")
@@ -109,11 +124,15 @@ def run(config_path: Path, workspace: Path, action_path: Path) -> None:
     os.environ["PROFILE_TIMEZONE"] = timezone
 
     scripts = action_path / "scripts"
-    sys.path.insert(0, str(scripts))
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
     signal = load_module(scripts / "update-profile-signal.py", "profile_signal_stream_runtime")
 
+    readme_rel = str((config.get("readme") or {}).get("path") or "README.md")
+    readme_path = workspace / readme_rel
+
     signal.ROOT = workspace
-    signal.README_PATH = workspace / "README.md"
+    signal.README_PATH = readme_path
     signal.LOG_ROOT = workspace / "data" / "activity"
     signal.STATE_PATH = workspace / "data" / "profile-signal-state.json"
     signal.PULSE_PATH = workspace / "assets" / "dev-pulse.svg"
@@ -143,25 +162,28 @@ def run(config_path: Path, workspace: Path, action_path: Path) -> None:
     state = signal.write_state(merged, now)
     refresh_at = state_refresh_time(state, now, signal.TZ)
 
-    readme = signal.README_PATH.read_text(encoding="utf-8")
-    blocks = {
-        "live_signal": signal.render_live_signal(state),
-        "current_focus": signal.render_focus(state),
-        "activity_stream": with_updated_at(
-            signal.render_activity_stream(state),
+    modules: dict[str, ModuleType] = {"signal": signal}
+    blocks = orchestrator.build_blocks(str(config.get("theme", "signal")), snapshot, state, modules)
+    if enabled.get("activity_stream", False):
+        blocks["activity_stream"] = with_updated_at(
+            blocks["activity_stream"],
             MARKERS["activity_stream"][1],
             refresh_at,
-        ),
-    }
+        )
 
-    for name, block in blocks.items():
+    readme = readme_path.read_text(encoding="utf-8")
+    for name in DYNAMIC_WIDGETS:
+        if not enabled.get(name, False):
+            continue
         start, end = MARKERS[name]
-        readme = replace_marker(readme, start, end, block)
+        readme = replace_marker(readme, start, end, blocks[name])
 
-    signal.README_PATH.write_text(readme, encoding="utf-8")
+    readme_path.write_text(readme, encoding="utf-8")
     print(
         "Profile Signal stream refreshed:",
         f"user={username}",
+        f"theme={config.get('theme')}",
+        "widgets=" + ",".join(name for name in DYNAMIC_WIDGETS if enabled.get(name, False)),
         f"events={len(events)}",
         f"state_updated={refresh_at.isoformat(timespec='minutes')}",
     )
