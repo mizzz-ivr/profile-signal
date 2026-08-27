@@ -1,0 +1,476 @@
+name: Bootstrap standalone Profile Signal repository
+
+on:
+  push:
+    branches:
+      - feat/standalone-oss-migration
+    paths:
+      - .github/workflows/migrate-from-profile-repo.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout standalone repository
+        uses: actions/checkout@v7
+        with:
+          ref: feat/standalone-oss-migration
+          fetch-depth: 0
+
+      - name: Checkout pinned profile repository source
+        uses: actions/checkout@v7
+        with:
+          repository: mizzz-ivr/mizzz-ivr
+          ref: 091cb5bfbe9d087360c144cc75f95b7547c2a023
+          path: _source
+
+      - name: Copy Profile Signal source only
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf .profile-signal distribution docs release-notes scripts tests
+          mkdir -p .github/workflows scripts tests docs/wiki
+
+          cp -R _source/.profile-signal ./.profile-signal
+          cp -R _source/distribution ./distribution
+          cp -R _source/release-notes ./release-notes
+          cp _source/scripts/build-profile-signal-release.py scripts/
+          cp _source/tests/test_profile_signal.py tests/
+          cp _source/tests/test_profile_signal_action.py tests/
+          cp _source/tests/test_profile_signal_history.py tests/
+          cp _source/tests/test_profile_signal_preset_registry.py tests/
+          cp _source/tests/test_profile_signal_v02_presets.py tests/
+
+          cp _source/.profile-signal/LICENSE LICENSE
+
+          # Japanese Wiki pages are preserved as -ja pages.
+          cp _source/docs/wiki/Home.md docs/wiki/Home-ja.md
+          cp _source/docs/wiki/Installation.md docs/wiki/Installation-ja.md
+          cp _source/docs/wiki/Configuration.md docs/wiki/Configuration-ja.md
+          cp _source/docs/wiki/Presets.md docs/wiki/Presets-ja.md
+          cp _source/docs/wiki/License.md docs/wiki/License-ja.md
+
+          cp _source/.github/workflows/profile-signal-release.yml .github/workflows/release.yml
+          cp _source/.github/workflows/sync-profile-signal-wiki.yml .github/workflows/wiki.yml
+
+          # Standalone repo uses root LICENSE, not the old scoped-license document.
+          sed -i '/PROFILE_SIGNAL_LICENSE.md/d' .github/workflows/release.yml
+          sed -i 's#sync-profile-signal-wiki.yml#wiki.yml#g' .github/workflows/wiki.yml
+
+          rm -rf _source
+
+      - name: Add standalone CI
+        shell: bash
+        run: |
+          cat > .github/workflows/ci.yml <<'YAML'
+          name: Profile Signal CI
+
+          on:
+            pull_request:
+            push:
+              branches:
+                - main
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            test:
+              runs-on: ubuntu-latest
+              timeout-minutes: 10
+              steps:
+                - uses: actions/checkout@v7
+                - uses: actions/setup-python@v6
+                  with:
+                    python-version: "3.12"
+                - name: Install dependencies
+                  run: python -m pip install --disable-pip-version-check --quiet PyYAML==6.0.2
+                - name: Compile
+                  run: |
+                    python -m py_compile .profile-signal/src/*.py .profile-signal/scripts/*.py scripts/*.py tests/*.py
+                - name: Unit tests
+                  run: python -m unittest discover -s tests -p 'test_*.py' -v
+                - name: Build package smoke test
+                  run: |
+                    python scripts/build-profile-signal-release.py --version v0.0.0-test
+                    python -m zipfile -t dist/profile-signal-v0.0.0-test.zip
+          YAML
+
+      - name: Write English README
+        shell: bash
+        run: |
+          cat > README.md <<'MD'
+          # Profile Signal
+
+          **Modular, config-driven GitHub Profile README widgets generated from public GitHub activity.**
+
+          [日本語](./README.ja.md) · [Wiki](https://github.com/mizzz-ivr/profile-signal/wiki) · [Releases](https://github.com/mizzz-ivr/profile-signal/releases)
+
+          Profile Signal turns a GitHub Profile README into a lightweight development dashboard while keeping the runtime inside your own profile repository.
+
+          It can generate widgets such as:
+
+          - **LIVE SIGNAL** — recent activity status, coding intensity, and build streak
+          - **TODAY** — commits, opened PRs, created issues, completed issues
+          - **CURRENT FOCUS** — the repository receiving the most weighted activity and its stack
+          - **DEV PULSE** — 7-day activity trend and CI signal
+          - **NOW BUILDING** — active repositories and repository health
+          - **ACTIVITY STREAM** — recent public GitHub events
+          - **DEV RECAP** — weekly/monthly history and achievements
+
+          ## Distribution model
+
+          Profile Signal is distributed as a **GitHub Release ZIP** rather than a remote `uses: owner/repo@tag` action.
+
+          After extracting a release into your `<username>/<username>` profile repository, the workflow runs the local composite action:
+
+          ```yaml
+          - uses: ./.profile-signal
+            with:
+              config: .github/profile-signal.yml
+          ```
+
+          This makes the exact runtime code visible in the repository that updates your public profile, avoids a runtime dependency on this repository, and lets you review diffs before upgrading.
+
+          ## Quick start
+
+          1. Open the [latest Release](https://github.com/mizzz-ivr/profile-signal/releases).
+          2. Download `profile-signal-vX.Y.Z.zip`.
+          3. Extract it into the root of your GitHub Profile repository (`<username>/<username>`).
+          4. Edit `.github/profile-signal.yml` and replace `YOUR_GITHUB_USERNAME`.
+          5. Commit and push the files.
+          6. Open **Actions → Profile Signal → Run workflow** once.
+
+          The default distribution is **public-only** and does not require a PAT or API key.
+
+          ## Presets
+
+          Current built-in presets:
+
+          | Preset | Purpose |
+          | --- | --- |
+          | `minimal` | LIVE SIGNAL + CURRENT FOCUS |
+          | `standard` | Balanced default |
+          | `full` | All widgets |
+          | `terminal` | Full layout with terminal theme |
+          | `compact` | TODAY + CURRENT FOCUS |
+          | `developer` | Current development activity |
+          | `activity` | Daily / 7-day / history activity |
+          | `oss` | Public repository work and health |
+
+          Presets are defined in `.profile-signal/presets/*.yml`. User `widgets` overrides always take precedence over the selected preset.
+
+          ## Documentation
+
+          Full installation, configuration, preset, and license documentation is maintained in the [GitHub Wiki](https://github.com/mizzz-ivr/profile-signal/wiki).
+
+          The Wiki source lives in `docs/wiki/` and is synchronized automatically after merges to `main`.
+
+          ## Privacy
+
+          Profile Signal v0 collects **public GitHub activity only**. `privacy.public_only: true` is required. Private repository information is not collected and then hidden later; it is excluded from the collection scope.
+
+          ## Development
+
+          ```bash
+          python -m pip install PyYAML==6.0.2
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          python scripts/build-profile-signal-release.py --version v0.0.0-test
+          ```
+
+          ## Showcase / dogfooding
+
+          The live profile at [github.com/mizzz-ivr](https://github.com/mizzz-ivr) runs Profile Signal itself and acts as the primary dogfooding environment.
+
+          ## License
+
+          MIT License. See [LICENSE](./LICENSE).
+          MD
+
+      - name: Write Japanese README
+        shell: bash
+        run: |
+          cat > README.ja.md <<'MD'
+          # Profile Signal
+
+          **公開GitHub Activityから、モジュール式のGitHub Profile README Widgetを自動生成するツールです。**
+
+          [English](./README.md) · [Wiki](https://github.com/mizzz-ivr/profile-signal/wiki) · [Releases](https://github.com/mizzz-ivr/profile-signal/releases)
+
+          Profile Signalは、GitHubプロフィールREADMEを「現在の開発状況が分かるダッシュボード」へ拡張します。runtimeは利用者自身のProfile Repository内に配置します。
+
+          主なWidget:
+
+          - **LIVE SIGNAL** — 最近の活動状態 / 開発強度 / Streak
+          - **TODAY** — Commit / PR / Issueの今日の集計
+          - **CURRENT FOCUS** — weighted activityが最も高いRepositoryとStack
+          - **DEV PULSE** — 直近7日のActivity推移とCI Signal
+          - **NOW BUILDING** — Active RepositoryとHealth
+          - **ACTIVITY STREAM** — 最近の公開GitHub Event
+          - **DEV RECAP** — Weekly / Monthly / Achievement
+
+          ## 配布方式
+
+          Profile Signalは外部Actionとして `uses: owner/repo@tag` で呼ぶ方式ではなく、**GitHub Release ZIP**として配布します。
+
+          Releaseを自分の `<username>/<username>` Repositoryへ展開し、local Composite Actionとして実行します。
+
+          ```yaml
+          - uses: ./.profile-signal
+            with:
+              config: .github/profile-signal.yml
+          ```
+
+          実行コードを自分のRepositoryで確認でき、配布元Repositoryへ実行時依存せず、更新前にdiffを確認できます。
+
+          ## クイックスタート
+
+          1. [最新Release](https://github.com/mizzz-ivr/profile-signal/releases)を開く
+          2. `profile-signal-vX.Y.Z.zip` をダウンロード
+          3. GitHub Profile Repository (`<username>/<username>`) のrootへ展開
+          4. `.github/profile-signal.yml` の `YOUR_GITHUB_USERNAME` を変更
+          5. commit / push
+          6. **Actions → Profile Signal → Run workflow** を1回実行
+
+          標準構成は**public-only**で、PATやAPI Keyは不要です。
+
+          ## Preset
+
+          `minimal / standard / full / terminal / compact / developer / activity / oss` を同梱しています。
+
+          詳細は[Wiki](https://github.com/mizzz-ivr/profile-signal/wiki)を参照してください。
+
+          ## 開発
+
+          ```bash
+          python -m pip install PyYAML==6.0.2
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          python scripts/build-profile-signal-release.py --version v0.0.0-test
+          ```
+
+          ## Showcase / Dogfooding
+
+          [github.com/mizzz-ivr](https://github.com/mizzz-ivr) の実プロフィールがProfile Signalを継続利用しており、Dogfooding環境兼Live Demoになっています。
+
+          ## License
+
+          MIT Licenseです。[LICENSE](./LICENSE)を参照してください。
+          MD
+
+      - name: Write bilingual Wiki source
+        shell: bash
+        run: |
+          cat > docs/wiki/Home.md <<'MD'
+          # Profile Signal
+
+          [English](Home) | [日本語](Home-ja)
+
+          Profile Signal generates modular GitHub Profile README widgets from **public GitHub development activity**.
+
+          ## Start here
+
+          - [Installation](Installation)
+          - [Configuration](Configuration)
+          - [Presets](Presets)
+          - [License](License)
+
+          ## Distribution
+
+          Download the latest `profile-signal-vX.Y.Z.zip` from the [Releases page](https://github.com/mizzz-ivr/profile-signal/releases), extract it into your `<username>/<username>` repository, configure your username, and run the included workflow.
+
+          The runtime is installed locally under `.profile-signal/` and invoked with `uses: ./.profile-signal`.
+
+          ## Privacy
+
+          The v0 contract is public-only. Private repository information is outside the collection scope.
+          MD
+
+          cat > docs/wiki/Installation.md <<'MD'
+          # Installation
+
+          [English](Installation) | [日本語](Installation-ja)
+
+          ## Requirements
+
+          - A GitHub Profile repository named `<username>/<username>`
+          - GitHub Actions enabled
+          - Repository Actions workflow permissions that allow write access to contents
+
+          ## Install
+
+          1. Download the latest `profile-signal-vX.Y.Z.zip` from [Releases](https://github.com/mizzz-ivr/profile-signal/releases).
+          2. Extract it at the root of your profile repository.
+          3. Edit `.github/profile-signal.yml` and set your GitHub login.
+          4. Commit and push the installed files.
+          5. Open **Actions → Profile Signal → Run workflow**.
+          6. Confirm that the README markers, generated SVG, and `data/` snapshots were created.
+
+          ## What is installed
+
+          ```text
+          .profile-signal/
+          .github/profile-signal.yml
+          .github/workflows/profile-signal.yml
+          PROFILE_SIGNAL_INSTALL.md
+          PROFILE_SIGNAL_VERSION
+          ```
+
+          The release archive intentionally does **not** contain your README. Profile Signal inserts or updates only its marker blocks.
+
+          ## Upgrade
+
+          Replace `.profile-signal/` with the runtime from the new release, review the diff, and keep your `.github/profile-signal.yml` unless the release notes require a configuration migration.
+
+          ## Uninstall
+
+          Remove `.profile-signal/`, the Profile Signal config/workflow, generated Profile Signal data/assets, and the `PROFILE-SIGNAL:*` / `DAILY-ACTIVITY:*` marker blocks from your README.
+          MD
+
+          cat > docs/wiki/Configuration.md <<'MD'
+          # Configuration
+
+          [English](Configuration) | [日本語](Configuration-ja)
+
+          Main configuration file: `.github/profile-signal.yml`
+
+          ```yaml
+          version: 1
+
+          profile:
+            username: YOUR_GITHUB_USERNAME
+            timezone: Asia/Tokyo
+
+          privacy:
+            public_only: true
+
+          preset: standard
+          theme: signal
+
+          widgets: {}
+
+          readme:
+            path: README.md
+            auto_insert_markers: true
+            insert_before: ""
+            empty_disabled: true
+          ```
+
+          ## Privacy
+
+          `privacy.public_only: true` is required in v0.
+
+          ## README placement
+
+          If `readme.insert_before` is empty, missing marker blocks are appended to the README. Set it to an existing heading when you want generated sections inserted before a specific location.
+
+          ## Widget overrides
+
+          Presets define the starting widget set. Explicit entries under `widgets` override the selected preset.
+          MD
+
+          cat > docs/wiki/Presets.md <<'MD'
+          # Presets
+
+          [English](Presets) | [日本語](Presets-ja)
+
+          Profile Signal presets are YAML files in `.profile-signal/presets/`.
+
+          | Preset | Focus |
+          | --- | --- |
+          | `minimal` | LIVE SIGNAL + CURRENT FOCUS |
+          | `standard` | Balanced default |
+          | `full` | All widgets |
+          | `terminal` | Full widget set + terminal theme |
+          | `compact` | TODAY + CURRENT FOCUS |
+          | `developer` | Current development activity |
+          | `activity` | Daily / trend / history activity |
+          | `oss` | Public repository activity and health |
+
+          ## Compatibility rules
+
+          - Existing preset meanings should not be changed incompatibly.
+          - New layouts should normally use a new preset ID.
+          - User widget overrides take precedence over presets.
+          - Presets cannot weaken the public-only privacy contract.
+          - Adding a preset must not modify an existing user's README unless that preset is selected.
+
+          The registry validates schema version, preset ID/file name consistency, known widgets, duplicate widgets, supported themes, and required built-in presets.
+          MD
+
+          cat > docs/wiki/License.md <<'MD'
+          # License
+
+          [English](License) | [日本語](License-ja)
+
+          Profile Signal is released under the **MIT License**.
+
+          The standalone `mizzz-ivr/profile-signal` repository is the OSS source of truth, so its reusable runtime, distribution tooling, tests, and documentation are covered by the repository MIT License unless otherwise noted.
+
+          See [LICENSE](https://github.com/mizzz-ivr/profile-signal/blob/main/LICENSE) for the full text.
+          MD
+
+          cat > docs/wiki/_Sidebar.md <<'MD'
+          ### English
+          - [Home](Home)
+          - [Installation](Installation)
+          - [Configuration](Configuration)
+          - [Presets](Presets)
+          - [License](License)
+
+          ### 日本語
+          - [ホーム](Home-ja)
+          - [導入](Installation-ja)
+          - [設定](Configuration-ja)
+          - [Preset](Presets-ja)
+          - [ライセンス](License-ja)
+          MD
+
+          for page in Home Installation Configuration Presets License; do
+            if ! grep -q '^\[English\]' "docs/wiki/${page}-ja.md"; then
+              tmp="$(mktemp)"
+              printf '[English](%s) | [日本語](%s-ja)\n\n' "$page" "$page" > "$tmp"
+              cat "docs/wiki/${page}-ja.md" >> "$tmp"
+              mv "$tmp" "docs/wiki/${page}-ja.md"
+            fi
+          done
+
+      - name: Normalize standalone workflows and metadata
+        shell: bash
+        run: |
+          cat > .gitignore <<'EOF'
+          dist/
+          __pycache__/
+          *.pyc
+          .pytest_cache/
+          EOF
+
+          # Wiki validation must require both language sets.
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/wiki.yml')
+          text = p.read_text(encoding='utf-8')
+          text = text.replace(
+              "'_Sidebar.md',\n          }",
+              "'_Sidebar.md',\n              'Home-ja.md',\n              'Installation-ja.md',\n              'Configuration-ja.md',\n              'Presets-ja.md',\n              'License-ja.md',\n          }",
+          )
+          p.write_text(text, encoding='utf-8')
+          PY
+
+          rm -f .github/workflows/migrate-from-profile-repo.yml
+
+      - name: Commit migrated standalone source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "feat: migrate Profile Signal to standalone OSS repository [skip ci]"
+          git push origin HEAD:feat/standalone-oss-migration
