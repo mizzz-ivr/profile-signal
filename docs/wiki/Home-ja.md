@@ -20,20 +20,28 @@ uses: ./.profile-signal
 
 導入後は利用者自身のRepository内だけでruntimeを実行し、GitHub ActionsからREADMEを更新します。
 
-## 現在の安定版
+## Source of Truth
 
-- `v0.1.0`
+`v0.3.0` 以降のProfile Signal本体・Release・Issue・Wikiは、専用Repository `mizzz-ivr/profile-signal` で管理します。
+
+`mizzz-ivr/mizzz-ivr` はProfile Signalを実際に使っているLive Demo / Dogfooding環境です。
+
+## 主な特徴
+
 - public-only
-- API Secret 不要
+- API Secret / PAT 不要
 - GitHub Actions による定期更新
 - README の既存本文は ZIP 展開時に上書きしない
+- 8種類のPreset
+- English / 日本語ドキュメント
+- MIT License
 
 ## Wiki
 
-- [導入手順](Installation)
-- [設定リファレンス](Configuration)
-- [プリセットとテンプレート](Presets)
-- [ライセンス](License)
+- [導入手順](Installation-ja)
+- [設定リファレンス](Configuration-ja)
+- [プリセットとテンプレート](Presets-ja)
+- [ライセンス](License-ja)
 
 ## 主な表示
 
@@ -51,6 +59,4 @@ uses: ./.profile-signal
 
 ## 配布方針
 
-Release ZIP を標準導入経路とします。Fork は完成形プロフィール全体を参考にしたい場合の補助的な方法です。
-
-Profile Signal の実行コードを利用者自身の Profile Repository に保持することで、導入内容を確認しやすくし、外部 Action Repository の可用性に毎回依存しない構成にしています。
+Release ZIP を標準導入経路とします。利用者自身の Profile Repository にruntimeを保持するため、実行コードを確認しやすく、配布元Repositoryへ実行時依存しません。
