@@ -1,0 +1,47 @@
+name: Bootstrap Profile Signal v0.3.0
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/bootstrap-v030.yml
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Build and validate v0.3.0 package
+        run: |
+          python scripts/build-profile-signal-release.py --version v0.3.0
+          python -m zipfile -t dist/profile-signal-v0.3.0.zip
+
+      - name: Publish v0.3.0 if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v0.3.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v0.3.0 already exists"
+            exit 0
+          fi
+          gh release create v0.3.0 \
+            "dist/profile-signal-v0.3.0.zip#Profile Signal v0.3.0" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target main \
+            --title "Profile Signal v0.3.0" \
+            --notes-file release-notes/v0.3.0.md
