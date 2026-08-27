@@ -10,6 +10,17 @@ Profile Signal turns a GitHub Profile README into a lightweight development dash
 
 `LIVE SIGNAL` · `TODAY` · `CURRENT FOCUS` · `DEV PULSE` · `NOW BUILDING` · `ACTIVITY STREAM` · `DEV RECAP`
 
+## Refresh cadence
+
+The release installs two workflows with different responsibilities:
+
+- **Full profile refresh** — every 3 hours. Updates TODAY, DEV PULSE, CI/health analytics, history, and all widgets.
+- **Latest signals refresh** — every 30 minutes. Updates only `LIVE SIGNAL`, `CURRENT FOCUS`, and `ACTIVITY STREAM` from public GitHub events.
+
+The lightweight stream workflow avoids re-running the heavier Search API, CI, and history aggregation every 30 minutes. It commits only when the live-facing state actually changes.
+
+GitHub public events can themselves be delayed, so `ACTIVITY STREAM` is intentionally described as the latest public signals rather than real-time activity.
+
 ## Quick start
 
 1. Download `profile-signal-vX.Y.Z.zip` from [Releases](https://github.com/mizzz-ivr/profile-signal/releases).
