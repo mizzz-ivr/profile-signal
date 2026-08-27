@@ -72,10 +72,23 @@ def replace_marker(text: str, start: str, end: str, block: str) -> str:
     return pattern.sub(block, text, count=1)
 
 
-def with_updated_at(block: str, end_marker: str, now: datetime) -> str:
+def state_refresh_time(state: Mapping[str, Any], fallback: datetime, tz: Any) -> datetime:
+    value = state.get("generated_at")
+    if not value:
+        return fallback
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return fallback
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=tz)
+    return parsed.astimezone(tz)
+
+
+def with_updated_at(block: str, end_marker: str, refresh_at: datetime) -> str:
     note = (
         '<p align="center"><sub>latest public signal refresh · '
-        + now.strftime("%H:%M JST")
+        + refresh_at.strftime("%H:%M JST")
         + "</sub></p>"
     )
     return block.replace(end_marker, f"{note}\n{end_marker}", 1)
@@ -128,6 +141,7 @@ def run(config_path: Path, workspace: Path, action_path: Path) -> None:
 
     merged = merge_dynamic_state(existing, fresh)
     state = signal.write_state(merged, now)
+    refresh_at = state_refresh_time(state, now, signal.TZ)
 
     readme = signal.README_PATH.read_text(encoding="utf-8")
     blocks = {
@@ -136,7 +150,7 @@ def run(config_path: Path, workspace: Path, action_path: Path) -> None:
         "activity_stream": with_updated_at(
             signal.render_activity_stream(state),
             MARKERS["activity_stream"][1],
-            now,
+            refresh_at,
         ),
     }
 
@@ -149,7 +163,7 @@ def run(config_path: Path, workspace: Path, action_path: Path) -> None:
         "Profile Signal stream refreshed:",
         f"user={username}",
         f"events={len(events)}",
-        f"updated={now.isoformat(timespec='minutes')}",
+        f"state_updated={refresh_at.isoformat(timespec='minutes')}",
     )
 
 
