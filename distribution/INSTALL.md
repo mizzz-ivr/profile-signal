@@ -44,7 +44,8 @@ Release ZIPは以下を追加し、既存README自体は含みません。
 │  └─ oss.yml
 ├─ src/
 │  ├─ orchestrator.py
-│  └─ preset_runtime.py
+│  ├─ preset_runtime.py
+│  └─ stream_runtime.py
 └─ scripts/
    ├─ update-profile-activity.py
    ├─ profile_signal.py
@@ -55,11 +56,41 @@ Release ZIPは以下を追加し、既存README自体は含みません。
 .github/
 ├─ profile-signal.yml
 └─ workflows/
-   └─ profile-signal.yml
+   ├─ profile-signal.yml
+   └─ profile-signal-stream.yml
 
 PROFILE_SIGNAL_INSTALL.md
 PROFILE_SIGNAL_VERSION
 ```
+
+## 更新頻度
+
+配布版では2つのWorkflowを役割分担させます。
+
+### フル更新
+
+`.github/workflows/profile-signal.yml`
+
+- 3時間ごと
+- TODAY
+- DEV PULSE
+- NOW BUILDING / PROJECT HEALTH
+- CI SIGNAL
+- DEV RECAP / Weekly / Monthly / Achievements
+- 全Widgetの整合更新
+
+### Latest signals更新
+
+`.github/workflows/profile-signal-stream.yml`
+
+- 30分ごと (`:07` / `:37`)
+- LIVE SIGNAL
+- CURRENT FOCUS
+- ACTIVITY STREAM
+- 既存のCI / History / Health stateは保持
+- 変化が無ければcommitしない
+
+GitHub Public EventsにはGitHub側の反映遅延があり得るため、ACTIVITY STREAMはリアルタイム保証ではなく「取得できた最新の公開Signal」として表示します。
 
 ## Preset
 
@@ -131,15 +162,16 @@ Settings → Actions → General → Workflow permissions → Read and write per
 2. `.profile-signal/` を新runtimeへ差し替えます。
 3. `.github/profile-signal.yml` は原則維持します。
 4. Release Notesでconfig migrationが指定された場合のみ設定を変更します。
-5. Workflow template差分を確認します。
+5. `profile-signal.yml` / `profile-signal-stream.yml` のWorkflow template差分を確認します。
 6. `Profile Signal` を手動実行し、生成diffを確認します。
 
 ## アンインストール
 
 1. `.profile-signal/` を削除します。
-2. `.github/profile-signal.yml` と `.github/workflows/profile-signal.yml` を削除します。
-3. READMEのProfile Signal marker blockを必要に応じて削除します。
-4. 不要なら `assets/` と `data/` の生成履歴を削除します。
+2. `.github/profile-signal.yml` を削除します。
+3. `.github/workflows/profile-signal.yml` と `.github/workflows/profile-signal-stream.yml` を削除します。
+4. READMEのProfile Signal marker blockを必要に応じて削除します。
+5. 不要なら `assets/` と `data/` の生成履歴を削除します。
 
 ## Privacy
 
