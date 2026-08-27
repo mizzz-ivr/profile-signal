@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation / Wiki
+    url: https://github.com/mizzz-ivr/profile-signal/wiki
+    about: Check installation, configuration, presets, and license documentation first.
