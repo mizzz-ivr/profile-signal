@@ -2,13 +2,15 @@
 
 Modular, config-driven GitHub Profile README widgets generated from public GitHub activity.
 
-[日本語](./README.ja.md) · [Wiki](https://github.com/mizzz-ivr/profile-signal/wiki) · [Releases](https://github.com/mizzz-ivr/profile-signal/releases)
+[日本語](./README.ja.md) · [Sample output](./examples/sample-profile/README.md) · [Wiki](https://github.com/mizzz-ivr/profile-signal/wiki) · [Releases](https://github.com/mizzz-ivr/profile-signal/releases)
 
 Profile Signal turns a GitHub Profile README into a lightweight development dashboard while keeping the runtime inside your own profile repository.
 
 ## Widgets
 
 `LIVE SIGNAL` · `TODAY` · `CURRENT FOCUS` · `DEV PULSE` · `NOW BUILDING` · `ACTIVITY STREAM` · `DEV RECAP`
+
+A deterministic [sample profile](./examples/sample-profile/README.md) is available for previewing the generated layout without installing Profile Signal first. Its values are static documentation data, not live account activity.
 
 ## Refresh cadence
 
