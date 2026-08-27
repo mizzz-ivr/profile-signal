@@ -2,7 +2,12 @@
 
 Profile Signal は、Release ZIPを自分のGitHub Profile Repositoryへ展開して利用する self-contained runtime です。
 
-推奨導入方法は **Release ZIP** です。Forkは完成形プロフィール全体を参考にしたい場合の補助導線とします。
+- Releases: https://github.com/mizzz-ivr/profile-signal/releases
+- Wiki: https://github.com/mizzz-ivr/profile-signal/wiki
+- English README: https://github.com/mizzz-ivr/profile-signal#readme
+- 日本語README: https://github.com/mizzz-ivr/profile-signal/blob/main/README.ja.md
+
+推奨導入方法は **Release ZIP** です。`mizzz-ivr/mizzz-ivr` はLive Demo / Dogfooding環境として扱います。
 
 ## 必要条件
 
@@ -13,7 +18,7 @@ Profile Signal は、Release ZIPを自分のGitHub Profile Repositoryへ展開�
 
 ## インストール
 
-1. Releasesから最新の `profile-signal-<version>.zip` を取得します。
+1. [Releases](https://github.com/mizzz-ivr/profile-signal/releases)から最新の `profile-signal-<version>.zip` を取得します。
 2. ZIPをProfile Repositoryのrootへ展開します。
 3. `.github/profile-signal.yml` を開きます。
 4. `YOUR_GITHUB_USERNAME` を自分のGitHub loginへ変更します。
@@ -149,6 +154,6 @@ Private Repository情報を取得して後段でmaskする設計にはしませ�
 
 ## License
 
-Profile Signal runtimeはMIT Licenseです。License本文は `.profile-signal/LICENSE` に含まれます。
+`mizzz-ivr/profile-signal` のOSS本体はMIT Licenseです。Repository rootの `LICENSE` と、Release ZIP内の `.profile-signal/LICENSE` にLicense本文を含めます。
 
-MIT Licenseの対象はProfile Signal runtimeおよびRelease package内の再利用可能部分で、配布元Profile Repositoryの個人文章・画像・Screenshotなどには適用しません。
+利用者自身のProfile README・画像・第三者素材などは、それぞれの所有者・ライセンスに従い、Profile SignalのMIT Licenseが自動的に適用されるものではありません。
