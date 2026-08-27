@@ -1,0 +1,18 @@
+name: Feature request
+description: Propose a new widget, preset, theme, or runtime improvement.
+title: "feat: "
+body:
+  - type: textarea
+    attributes:
+      label: Problem or use case
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Compatibility notes
+      description: Explain any impact on existing presets, markers, config, or release installs.
