@@ -2,11 +2,13 @@
 
 公開GitHub Activityから、モジュール式のGitHub Profile README Widgetを自動生成するツールです。
 
-[English](./README.md) · [Wiki](https://github.com/mizzz-ivr/profile-signal/wiki) · [Releases](https://github.com/mizzz-ivr/profile-signal/releases)
+[English](./README.md) · [サンプル](./examples/sample-profile/README.md) · [Wiki](https://github.com/mizzz-ivr/profile-signal/wiki) · [Releases](https://github.com/mizzz-ivr/profile-signal/releases)
 
 ## 主なWidget
 
 `LIVE SIGNAL` · `TODAY` · `CURRENT FOCUS` · `DEV PULSE` · `NOW BUILDING` · `ACTIVITY STREAM` · `DEV RECAP`
+
+導入前でも生成後の見た目を確認できるよう、固定データを使った[サンプルProfile](./examples/sample-profile/README.md)を用意しています。サンプル値はドキュメント用で、実アカウントのActivityではありません。
 
 ## 更新頻度
 
