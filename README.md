@@ -10,6 +10,17 @@ Profile Signal turns a GitHub Profile README into a lightweight development dash
 
 `LIVE SIGNAL` · `TODAY` · `CURRENT FOCUS` · `DEV PULSE` · `NOW BUILDING` · `ACTIVITY STREAM` · `DEV RECAP`
 
+## Refresh cadence
+
+The default distribution separates heavy analytics from live-facing signals:
+
+- **Full profile refresh — every 3 hours**: TODAY/Search API metrics, DEV PULSE, repository health/CI, weekly/monthly history, DEV RECAP, and all enabled widgets.
+- **Latest signals refresh — every 30 minutes**: `LIVE SIGNAL`, `CURRENT FOCUS`, and `ACTIVITY STREAM` only.
+
+The 30-minute workflow consumes public GitHub Events, preserves the heavier analytics state, and commits only when the live-facing state actually changes.
+
+GitHub Public Events can be delayed upstream, so `ACTIVITY STREAM` means the latest public signals available from GitHub rather than a real-time guarantee.
+
 ## Quick start
 
 1. Download `profile-signal-vX.Y.Z.zip` from [Releases](https://github.com/mizzz-ivr/profile-signal/releases).
@@ -18,13 +29,15 @@ Profile Signal turns a GitHub Profile README into a lightweight development dash
 4. Commit and push.
 5. Run **Actions → Profile Signal → Run workflow** once.
 
-The installed workflow executes the local runtime:
+The installed full-refresh workflow executes the local runtime:
 
 ```yaml
 - uses: ./.profile-signal
   with:
     config: .github/profile-signal.yml
 ```
+
+The release also installs `.github/workflows/profile-signal-stream.yml` for the lightweight 30-minute refresh.
 
 The default distribution is public-only and requires no PAT or API key.
 
