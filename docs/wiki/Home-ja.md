@@ -14,6 +14,7 @@ GitHub Release ZIP
 .profile-signal/
 .github/profile-signal.yml
 .github/workflows/profile-signal.yml
+.github/workflows/profile-signal-stream.yml
         ↓
 uses: ./.profile-signal
 ```
@@ -26,11 +27,19 @@ uses: ./.profile-signal
 
 `mizzz-ivr/mizzz-ivr` はProfile Signalを実際に使っているLive Demo / Dogfooding環境です。
 
+## 現在のRelease
+
+- [Profile Signal v0.4.0](https://github.com/mizzz-ivr/profile-signal/releases/tag/v0.4.0)
+- [すべてのReleases](https://github.com/mizzz-ivr/profile-signal/releases)
+
+v0.4.0では、LIVE SIGNAL / CURRENT FOCUS / ACTIVITY STREAMを30分ごとに軽量更新し、重い集計は3時間ごとのフル更新へ残す構成に分離しています。
+
 ## 主な特徴
 
 - public-only
 - API Secret / PAT 不要
 - GitHub Actions による定期更新
+- 3時間ごとのフル更新 + 30分ごとのLatest Signals更新
 - README の既存本文は ZIP 展開時に上書きしない
 - 8種類のPreset
 - English / 日本語ドキュメント
