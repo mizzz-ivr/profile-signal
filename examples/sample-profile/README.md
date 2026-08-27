@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Public GitHub activity → a compact development dashboard</strong><br/>
-  <sub>Example generated with the <code>developer</code> preset and <code>signal</code> theme.</sub>
+  <sub>Example generated with the <code>full</code> preset and <code>signal</code> theme.</sub>
 </p>
 
 ---
@@ -15,7 +15,7 @@
 <table>
   <tr>
     <td width="33%" align="center"><strong>● BUILDING</strong><br/><sub>last public activity · 10:24 JST</sub></td>
-    <td width="34%" align="center"><strong>⚡ ACTIVE</strong><br/><sub>12 public actions today</sub></td>
+    <td width="34%" align="center"><strong>⚡ HEAVY CODING</strong><br/><sub>27 public actions today</sub></td>
     <td width="33%" align="center"><strong>🔥 6 DAY STREAK</strong><br/><sub>public GitHub activity</sub></td>
   </tr>
 </table>
