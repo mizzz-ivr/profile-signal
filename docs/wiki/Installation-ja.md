@@ -16,12 +16,6 @@ API Key や PAT は、標準の public-only 構成では不要です。
 
 GitHub Releases から最新の `profile-signal-<version>.zip` をダウンロードします。
 
-`v0.1.0` の場合:
-
-```text
-profile-signal-v0.1.0.zip
-```
-
 ## 2. Profile Repository の root へ展開
 
 ZIP を展開すると、主に以下が追加されます。
@@ -30,13 +24,18 @@ ZIP を展開すると、主に以下が追加されます。
 .profile-signal/
 ├─ action.yml
 ├─ LICENSE
+├─ presets/
 ├─ src/
+│  ├─ orchestrator.py
+│  ├─ preset_runtime.py
+│  └─ stream_runtime.py
 └─ scripts/
 
 .github/
 ├─ profile-signal.yml
 └─ workflows/
-   └─ profile-signal.yml
+   ├─ profile-signal.yml
+   └─ profile-signal-stream.yml
 
 PROFILE_SIGNAL_INSTALL.md
 PROFILE_SIGNAL_VERSION
@@ -65,15 +64,11 @@ preset: standard
 theme: signal
 ```
 
-最初は `standard` を推奨します。
-
-利用可能な preset と追加予定の考え方は [プリセットとテンプレート](Presets) を参照してください。
+最初は `standard` を推奨します。利用可能なpresetは [プリセットとテンプレート](Presets) を参照してください。
 
 ## 5. GitHub Actions の書き込み権限を確認
 
 Repository の設定で、Workflow が contents を更新できる必要があります。
-
-GitHub UI:
 
 ```text
 Settings
@@ -83,29 +78,45 @@ Settings
         → Read and write permissions
 ```
 
-Organization / Repository policy で書き込みが禁止されている場合は、Profile Signal の生成自体は成功しても README への commit / push が失敗します。
-
 ## 6. commit / push
 
-展開したファイルと設定を commit します。
-
 ```bash
-git add .profile-signal .github/profile-signal.yml .github/workflows/profile-signal.yml PROFILE_SIGNAL_INSTALL.md PROFILE_SIGNAL_VERSION
+git add .profile-signal .github/profile-signal.yml .github/workflows/profile-signal.yml .github/workflows/profile-signal-stream.yml PROFILE_SIGNAL_INSTALL.md PROFILE_SIGNAL_VERSION
 git commit -m "feat: install Profile Signal"
 git push
 ```
 
 ## 7. 初回実行
 
-GitHub UI から:
+GitHub UI から **Actions → Profile Signal → Run workflow** を1回実行します。
 
-```text
-Actions
-  → Profile Signal
-    → Run workflow
-```
+## 更新頻度
 
-を実行します。
+Profile Signalは、重い集計とLatest Signalsを分離しています。
+
+### フル更新 — 3時間ごと
+
+`.github/workflows/profile-signal.yml`
+
+- TODAY / Search API集計
+- DEV PULSE
+- NOW BUILDING / PROJECT HEALTH
+- CI SIGNAL
+- Weekly / Monthly履歴
+- DEV RECAP / Achievements
+- 全有効Widget
+
+### Latest Signals更新 — 30分ごと
+
+`.github/workflows/profile-signal-stream.yml`
+
+- LIVE SIGNAL
+- CURRENT FOCUS
+- ACTIVITY STREAM
+- 既存CI / History / Health stateを保持
+- 表示内容に変化がなければcommitしない
+
+GitHub Public Events自体にはGitHub側の反映遅延があり得ます。そのためACTIVITY STREAMはリアルタイム保証ではなく、取得できた最新の公開Signalとして表示します。
 
 ## 8. 生成結果を確認
 
@@ -113,23 +124,13 @@ Actions
 
 - `README.md`
 - `data/`
-- `assets/dev-pulse.svg` などの生成 Asset
+- `assets/dev-pulse.svg` などの生成Asset
 
-`minimal` のように SVG を使わない構成では `assets/` が存在しない場合があります。これは正常です。
+`minimal` のようにSVGを使わない構成では `assets/` が存在しない場合があります。これは正常です。
 
 ## README の挿入位置
 
-標準配布設定では:
-
-```yaml
-readme:
-  path: README.md
-  auto_insert_markers: true
-  insert_before: ""
-  empty_disabled: true
-```
-
-となっており、既存見出しを推測せず README 末尾へ追加します。
+標準配布設定では既存見出しを推測せずREADME末尾へ追加します。
 
 特定見出しの前へ入れたい場合:
 
@@ -139,19 +140,15 @@ readme:
   insert_before: "## About me"
 ```
 
-のように変更できます。
-
 ## 更新
 
 新Releaseへ更新する場合は、まず現在のRepositoryをcommitしてRollbackできる状態にしてください。
 
-推奨手順:
-
 1. 新しいRelease ZIPを取得
 2. `.profile-signal/` を新しいruntimeへ差し替える
 3. 既存 `.github/profile-signal.yml` は原則維持
-4. Release Notes にconfig migrationがある場合だけ設定を変更
-5. Workflow templateの差分を確認
+4. Release Notesにconfig migrationがある場合だけ設定を変更
+5. `profile-signal.yml` / `profile-signal-stream.yml` の差分を確認
 6. `Profile Signal` を手動実行
 7. README / data / assets のdiffを確認
 
@@ -159,6 +156,6 @@ readme:
 
 1. `.profile-signal/` を削除
 2. `.github/profile-signal.yml` を削除
-3. `.github/workflows/profile-signal.yml` を削除
+3. `.github/workflows/profile-signal.yml` と `.github/workflows/profile-signal-stream.yml` を削除
 4. README の Profile Signal marker block を必要に応じて削除
 5. 不要なら `assets/` と `data/` の生成物を削除
