@@ -2,37 +2,22 @@
 
 # ライセンス
 
-## Profile Signal runtime
+Profile Signal は **MIT License** で公開しています。
 
-Profile Signal runtime は **MIT License** で配布します。
+`mizzz-ivr/profile-signal` はProfile SignalのOSS本体・Source of Truthです。Repository内のruntime、配布ツール、テスト、ドキュメントは、個別に別記されていない限りRepository rootのMIT Licenseに従います。
 
-対象:
+License本文:
 
-- `.profile-signal/` 配下のProfile Signal runtime
-- Profile Signal Release ZIPに含まれる同runtime
-- 配布用設定・Workflow template・導入ドキュメントのうち、Release packageとして配布される部分
+https://github.com/mizzz-ivr/profile-signal/blob/main/LICENSE
 
-MIT License本文は `.profile-signal/LICENSE` に含まれています。
+Release ZIP内にも `.profile-signal/LICENSE` としてMIT License本文を含めます。
 
-MIT Licenseでは、著作権表示とライセンス表示を保持することを条件に、利用・改変・再配布などが可能です。
+## 利用・改変・再配布
 
-## Profile Repository全体について
+MIT Licenseの条件に従い、利用・改変・再配布が可能です。再配布時はcopyright noticeとLicense本文を保持してください。
 
-`mizzz-ivr/mizzz-ivr` Repository全体をMIT License対象にはしません。
+## 利用者のProfileコンテンツ
 
-特に以下は、Profile Signal runtime のMIT License対象外です。
+Profile Signalを導入した利用者自身のREADME本文、画像、第三者素材などに、Profile SignalのMIT Licenseが自動的に適用されるわけではありません。それらは各コンテンツの所有者・ライセンスに従います。
 
-- 個人プロフィール本文
-- 個人用画像・Avatar・Hero画像
-- Screenshot
-- 個人の文章・紹介文
-- Profile Signal packageに含めていない個人向けAsset
-- 第三者の商標・Logo・著作物
-
-これにより、再利用可能なソフトウェア部分だけを明確にOSSとして扱います。
-
-## 再配布時
-
-Profile Signal runtimeを再配布する場合は、MIT License本文とcopyright noticeを削除しないでください。
-
-詳細な適用範囲はRepository rootの `PROFILE_SIGNAL_LICENSE.md` にも記載します。
+Live Demoとして利用している `mizzz-ivr/mizzz-ivr` の個人プロフィール本文や画像も、このstandalone RepositoryのMIT License対象ではありません。
