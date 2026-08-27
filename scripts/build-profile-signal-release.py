@@ -19,6 +19,7 @@ REQUIRED_RUNTIME = (
     "LICENSE",
     "src/orchestrator.py",
     "src/preset_runtime.py",
+    "src/stream_runtime.py",
     "scripts/update-profile-activity.py",
     "scripts/profile_signal.py",
     "scripts/update-profile-signal.py",
@@ -51,7 +52,12 @@ def validate_sources() -> None:
         for name in REQUIRED_PRESETS
         if not (RUNTIME / "presets" / name).is_file()
     )
-    for path in ("profile-signal.yml", "profile-signal-workflow.yml", "INSTALL.md"):
+    for path in (
+        "profile-signal.yml",
+        "profile-signal-workflow.yml",
+        "profile-signal-stream-workflow.yml",
+        "INSTALL.md",
+    ):
         if not (DISTRIBUTION / path).is_file():
             missing.append(f"distribution/{path}")
     if missing:
@@ -75,6 +81,10 @@ def build(version: str) -> Path:
         shutil.copy2(
             DISTRIBUTION / "profile-signal-workflow.yml",
             workflows_dir / "profile-signal.yml",
+        )
+        shutil.copy2(
+            DISTRIBUTION / "profile-signal-stream-workflow.yml",
+            workflows_dir / "profile-signal-stream.yml",
         )
         shutil.copy2(DISTRIBUTION / "INSTALL.md", root / "PROFILE_SIGNAL_INSTALL.md")
         (root / "PROFILE_SIGNAL_VERSION").write_text(version + "\n", encoding="utf-8")
