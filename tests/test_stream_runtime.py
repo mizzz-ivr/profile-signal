@@ -55,6 +55,18 @@ class StreamRuntimeTests(unittest.TestCase):
         self.assertIn("latest public signal refresh · 12:34 JST", updated)
         self.assertTrue(updated.endswith(end))
 
+    def test_refresh_time_uses_existing_generated_at(self) -> None:
+        tz = ZoneInfo("Asia/Tokyo")
+        fallback = datetime(2026, 8, 27, 13, 0, tzinfo=tz)
+        state = {"generated_at": "2026-08-27T12:34:00+09:00"}
+        refresh_at = stream.state_refresh_time(state, fallback, tz)
+        self.assertEqual(refresh_at.strftime("%H:%M"), "12:34")
+
+    def test_refresh_time_falls_back_for_missing_timestamp(self) -> None:
+        tz = ZoneInfo("Asia/Tokyo")
+        fallback = datetime(2026, 8, 27, 13, 0, tzinfo=tz)
+        self.assertIs(stream.state_refresh_time({}, fallback, tz), fallback)
+
 
 if __name__ == "__main__":
     unittest.main()
