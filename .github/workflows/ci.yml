@@ -62,6 +62,7 @@ jobs:
             .profile-signal/action.yml \
             .profile-signal/src/orchestrator.py \
             .profile-signal/src/preset_runtime.py \
+            .profile-signal/src/stream_runtime.py \
             .profile-signal/presets/minimal.yml \
             .profile-signal/presets/standard.yml \
             .profile-signal/presets/full.yml \
@@ -71,6 +72,7 @@ jobs:
             .profile-signal/presets/activity.yml \
             .profile-signal/presets/oss.yml \
             .github/profile-signal.yml \
-            .github/workflows/profile-signal.yml; do
+            .github/workflows/profile-signal.yml \
+            .github/workflows/profile-signal-stream.yml; do
             unzip -l dist/profile-signal-v0.0.0-test.zip | grep -F "$required" >/dev/null
           done
