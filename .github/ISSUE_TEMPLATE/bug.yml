@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible Profile Signal problem.
+title: "bug: "
+body:
+  - type: textarea
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Profile Signal version
+      placeholder: v0.3.0
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Relevant public logs
+      description: Do not paste secrets, tokens, or private repository information.
