@@ -1,0 +1,61 @@
+name: Profile Signal CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check --quiet PyYAML==6.0.2
+
+      - name: Compile Python sources
+        run: python -m py_compile .profile-signal/src/*.py .profile-signal/scripts/*.py scripts/*.py tests/*.py
+
+      - name: Unit tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Build release package
+        run: |
+          python scripts/build-profile-signal-release.py --version v0.0.0-test
+          python -m zipfile -t dist/profile-signal-v0.0.0-test.zip
+
+      - name: Validate release package contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -l dist/profile-signal-v0.0.0-test.zip
+          for required in \
+            .profile-signal/action.yml \
+            .profile-signal/src/orchestrator.py \
+            .profile-signal/src/preset_runtime.py \
+            .profile-signal/presets/minimal.yml \
+            .profile-signal/presets/standard.yml \
+            .profile-signal/presets/full.yml \
+            .profile-signal/presets/terminal.yml \
+            .profile-signal/presets/compact.yml \
+            .profile-signal/presets/developer.yml \
+            .profile-signal/presets/activity.yml \
+            .profile-signal/presets/oss.yml \
+            .github/profile-signal.yml \
+            .github/workflows/profile-signal.yml; do
+            unzip -l dist/profile-signal-v0.0.0-test.zip | grep -F "$required" >/dev/null
+          done
