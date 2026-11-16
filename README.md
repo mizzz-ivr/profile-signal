@@ -12,6 +12,8 @@ Profile Signal turns a GitHub Profile README into a lightweight development dash
 
 A deterministic [sample profile](./examples/sample-profile/README.md) is available for previewing the generated layout without installing Profile Signal first. Its values are static documentation data, not live account activity.
 
+**Optional add-on — WRITING**: `.profile-signal/scripts/profile_signal_writing.py` renders your latest public Qiita / Zenn articles into a `PROFILE-SIGNAL:WRITING` block. It uses public feeds only (no token), fails closed (a fetch error keeps the previous block), and is wired in from the consumer customization step with a small `.github/profile-writing.json` config (`qiita_user` / `zenn_user` / `limit`).
+
 ## Refresh cadence
 
 The default distribution separates heavy analytics from live-facing signals:

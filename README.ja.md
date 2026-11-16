@@ -10,6 +10,8 @@
 
 導入前でも生成後の見た目を確認できるよう、固定データを使った[サンプルProfile](./examples/sample-profile/README.md)を用意しています。サンプル値はドキュメント用で、実アカウントのActivityではありません。
 
+**任意アドオン — WRITING**: `.profile-signal/scripts/profile_signal_writing.py` が Qiita / Zenn の最新公開記事を `PROFILE-SIGNAL:WRITING` ブロックへ描画します。公開フィードのみ（トークン不要）、取得失敗時は前回ブロックを保持する fail-close 設計で、consumer 側のカスタマイズ工程から `.github/profile-writing.json`（`qiita_user` / `zenn_user` / `limit`）で配線します。
+
 ## 更新頻度
 
 標準配布では、重い集計とLatest Signalsを分離します。
